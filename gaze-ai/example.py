@@ -12,9 +12,7 @@ while True:
     frame = gaze.annotated_frame()
     text = ""
 
-    if gaze.is_blinking():
-        text = "Blinking"
-    elif gaze.is_right():
+    if gaze.is_right():
         text = "Looking right"
     elif gaze.is_left():
         text = "Looking left"
