@@ -14,4 +14,4 @@ allow_headers=["*"],
 
 @app.get("/predict")
 def predict():
-    return {"message": "Prediction here"}
+    return {"choice": 0}
