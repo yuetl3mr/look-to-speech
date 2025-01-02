@@ -1,0 +1,7 @@
+dlib==19.24.4
+fastapi==0.115.6
+Flask==1.1.2
+numpy==2.2.1
+opencv_contrib_python==4.10.0.84
+opencv_python==4.10.0.82
+Requests==2.32.3
