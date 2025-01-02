@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ESP32-CAM Stream</title>
+    <style>
+      canvas {
+        display: block;
+        margin: 0 auto;
+        border: 2px solid black;
+        width: 800px;
+        height: 600px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1 style="text-align: center">Luồng Video từ Python</h1>
+    <canvas id="videoCanvas"></canvas>
+
+    <script>
+      const canvas = document.getElementById("videoCanvas");
+      const ctx = canvas.getContext("2d");
+      const img = new Image();
+
+      // URL của luồng MJPEG từ Flask
+      img.src = "http://127.0.0.1:5000/video_feed";
+
+      // Tự động vẽ ảnh vào canvas với kích thước phù hợp
+      img.onload = () => {
+        const desiredWidth = 800;
+        const desiredHeight = 600;
+
+        canvas.width = desiredWidth;
+        canvas.height = desiredHeight;
+
+        setInterval(() => {
+          ctx.drawImage(img, 0, 0, desiredWidth, desiredHeight);
+        }, 33); // 30 FPS
+      };
+    </script>
+  </body>
+</html>
