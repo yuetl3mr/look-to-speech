@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gaze Tracking - Video Feed</title>
+    <style>
+      body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f9;
+        margin: 0;
+        padding: 0;
+      }
+      h1 {
+        margin-top: 20px;
+        font-size: 24px;
+        color: #333;
+      }
+      img {
+        border: 2px solid black;
+        width: 800px;
+        height: 600px;
+      }
+      #info {
+        margin-top: 20px;
+        text-align: center;
+        font-size: 18px;
+        color: #555;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Gaze Tracking - Luồng Video</h1>
+    <!--  MJPEG -->
+    <img src="http://127.0.0.1:8000/video_feed" alt="Video Feed" />
+
+    <!-- FPS -->
+    <div id="info">
+      <p id="fps">FPS: Đang tải...</p>
+      <p id="gazeStatus">Trạng thái ánh mắt: Đang tải...</p>
+    </div>
+
+    <script>
+      async function fetchGazeData() {
+        try {
+          const startTime = performance.now();
+          const response = await fetch("http://127.0.0.1:8000/predict");
+          const data = await response.json();
+          const endTime = performance.now();
+
+          // Tính FPS dựa trên thời gian phản hồi
+          const fps = Math.round(1000 / (endTime - startTime));
+
+          // Hiển thị FPS
+          document.getElementById("fps").textContent = `FPS: ${fps}`;
+
+          // Hiển thị trạng thái ánh mắt
+          if (data.status === "success") {
+            document.getElementById(
+              "gazeStatus"
+            ).textContent = `Trạng thái ánh mắt: ${data.text}`;
+          } else {
+            document.getElementById(
+              "gazeStatus"
+            ).textContent = `Lỗi: ${data.message}`;
+          }
+        } catch (error) {
+          document.getElementById(
+            "fps"
+          ).textContent = `FPS: Không thể tính toán`;
+          document.getElementById(
+            "gazeStatus"
+          ).textContent = `Lỗi: ${error.message}`;
+        }
+      }
+
+      // Gọi hàm fetchGazeData liên tục mỗi giây
+      setInterval(fetchGazeData, 1000);
+    </script>
+  </body>
+</html>
