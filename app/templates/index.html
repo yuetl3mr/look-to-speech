@@ -9,9 +9,20 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="../static/styles.css" />
+    <style>
+      #videoCanvas {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        width: 300px;
+        height: 225px;
+        border: 2px solid black;
+        z-index: 10;
+      }
+    </style>
   </head>
   <body>
-    <h1>Look to speech</h1>
+    <h1>Look to Speech</h1>
     <section class="info">
       <p class="credit">
         Built by
@@ -23,10 +34,8 @@
         >
       </p>
       <p class="instruction">
-        Look left or right to filter down the text you would like to
-        select.
+        Look left or right to filter down the text you would like to select.
       </p>
-      <!-- <p class="model-status">Machine learning model loading...</p> -->
     </section>
 
     <main>
@@ -39,24 +48,57 @@
             rows="1"
           ></textarea>
           <section class="letters">
-            <section class="section-left">
-              <!-- <p>Who are you?</p>
-              <p>What your name?</p>
-              <p>SOS</p>
-              <p>I wanna eat sth</p> -->
-            </section>
-            <section class="section-right">
-              <!-- <p>I need water</p>
-              <p>I need you</p>
-              <p>Yes</p>
-              <p>No</p> -->
-            </section>
+            <section class="section-left"></section>
+            <section class="section-right"></section>
           </section>
         </section>
       </div>
       <button id="start">Start</button>
     </main>
-    
+
+    <canvas id="videoCanvas"></canvas>
+
+    <script>
+      const canvas = document.getElementById("videoCanvas");
+      const ctx = canvas.getContext("2d");
+      const img = new Image();
+
+      let lastTimestamp = performance.now();
+      let fps = 0;
+      let lastFpsUpdate = performance.now(); // Thời gian cập nhật FPS lần cuối
+      let displayedFps = 0; // FPS được hiển thị
+
+      // URL của luồng video từ FastAPI
+      img.src = "http://127.0.0.1:8888/video_feed";
+
+      // Vẽ video và FPS lên canvas
+      img.onload = () => {
+        const desiredWidth = canvas.width;
+        const desiredHeight = canvas.height;
+
+        setInterval(() => {
+          // Tính FPS
+          const currentTimestamp = performance.now();
+          fps = Math.round(1000 / (currentTimestamp - lastTimestamp));
+          lastTimestamp = currentTimestamp;
+
+          // Cập nhật FPS hiển thị mỗi 3 giây
+          if (currentTimestamp - lastFpsUpdate >= 2000) {
+            displayedFps = fps;
+            lastFpsUpdate = currentTimestamp;
+          }
+
+          // Xóa canvas và vẽ video
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0, desiredWidth, desiredHeight);
+
+          // Hiển thị FPS dưới khung hình
+          ctx.font = "16px Arial";
+          ctx.fillStyle = "green"; // Đổi màu thành xanh lá cây
+          ctx.fillText(`FPS: ${displayedFps}`, 10, desiredHeight - 10);
+        }, 33); // Cập nhật mỗi 33ms (~30 FPS)
+      };
+    </script>
     <script src="../static/index.js"></script>
   </body>
 </html>
