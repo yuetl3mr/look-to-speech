@@ -16,6 +16,8 @@ const output = document.querySelector(".output");
 let previousChoice = null;
 let sameChoiceCount = 0;
 let reset = true;
+let isFetching = false; 
+
 const splitArray = (array) => {
   const mid = Math.ceil(array.length / 2);
   return [array.slice(0, mid), array.slice(mid)];
@@ -35,11 +37,11 @@ const initKeyboardUI = (array) => {
 
   renderSection(leftSection, leftArray);
   renderSection(rightSection, rightArray);
-
-  handleAPIResponse(leftArray, rightArray);
 };
 
 const handleAPIResponse = (leftArray, rightArray) => {
+  if (!isFetching) return; 
+
   setTimeout(() => {
     fetch('http://127.0.0.1:8888/predict', {
       method: 'GET',
@@ -51,6 +53,13 @@ const handleAPIResponse = (leftArray, rightArray) => {
       .then(data => {
         const choice = data.choice;
         console.log(choice);
+
+        const keyboard = document.querySelector('.keyboard');
+        if (choice === -1) {
+          keyboard.style.border = '3px solid rgba(255, 0, 0, 0.5)'; 
+        } else {
+          keyboard.style.border = '3px solid rgb(105, 223, 242)'; 
+        }
 
         if (choice === previousChoice) {
           sameChoiceCount++;
@@ -70,9 +79,11 @@ const handleAPIResponse = (leftArray, rightArray) => {
             setTimeout(() => {
               if (choice === 1 && leftArray.length === 1) {
                 output.value = leftArray[0];
+                isFetching = false; 
                 initKeyboardUI(initialSentence);
               } else if (choice === 2 && rightArray.length === 1) {
                 output.value = rightArray[0];
+                isFetching = false; 
                 initKeyboardUI(initialSentence);
               } else {
                 const selectedArray = choice === 1 ? leftArray : (choice === 2 ? rightArray : null);
@@ -96,5 +107,12 @@ const handleAPIResponse = (leftArray, rightArray) => {
   }, 500);
 };
 
+document.getElementById('start').addEventListener('click', () => {
+  if (isFetching) return; 
+  isFetching = true; 
+  initKeyboardUI(initialSentence); 
+  const [leftArray, rightArray] = splitArray(initialSentence);
+  handleAPIResponse(leftArray, rightArray); 
+});
 
 initKeyboardUI(initialSentence);
