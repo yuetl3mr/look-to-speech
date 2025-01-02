@@ -1,8 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from gaze_tracking import GazeTracking
+from fastapi.responses import StreamingResponse
 import cv2
-import asyncio
+import urllib.request
+import numpy as np
 
 app = FastAPI()
 
@@ -15,26 +17,58 @@ app.add_middleware(
 )
 
 gaze = GazeTracking()
-webcam = cv2.VideoCapture(0)
+url = 'http://172.20.10.3/cam-hi.jpg'  # Đường dẫn camera ngoài
 
+# Endpoint lấy hướng nhìn
 @app.get("/predict")
 async def predict():
-    _, frame = webcam.read()
-    gaze.refresh(frame)
+    try:
+        img_resp = urllib.request.urlopen(url)
+        img_np = np.array(bytearray(img_resp.read()), dtype=np.uint8)
+        frame = cv2.imdecode(img_np, cv2.IMREAD_COLOR)
 
-    if gaze.is_left():
-        return {"choice": 1}   # 1 for looking left
-    elif gaze.is_right():
-        return {"choice": 2}   # 2 for looking right
-    elif gaze.is_center():
-        return {"choice": 0}   # 0 for looking center
-    return {"choice": -1}  # Default case (if no direction detected)
+        gaze.refresh(frame)
 
-async def release_webcam():
-    await asyncio.sleep(5)
-    webcam.release()
+        if gaze.is_left():
+            return {"choice": 1}  # 1: Nhìn sang trái
+        elif gaze.is_right():
+            return {"choice": 2}  # 2: Nhìn sang phải
+        elif gaze.is_center():
+            return {"choice": 0}  # 0: Nhìn thẳng
+        return {"choice": -1}  # -1: Không xác định
+    except Exception as e:
+        return {"error": str(e)}
 
+# Endpoint luồng video MJPEG
+@app.get("/video_feed")
+def video_feed():
+    def generate():
+        while True:
+            try:
+                # Lấy dữ liệu từ camera ngoài
+                img_resp = urllib.request.urlopen(url)
+                img_np = np.array(bytearray(img_resp.read()), dtype=np.uint8)
+                frame = cv2.imdecode(img_np, cv2.IMREAD_COLOR)
+
+                # Mã hóa khung hình thành JPEG
+                _, buffer = cv2.imencode('.jpg', frame)
+                frame_bytes = buffer.tobytes()
+
+                # Gửi luồng MJPEG
+                yield (b'--frame\r\n'
+                       b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+            except Exception as e:
+                print(f"Lỗi trong luồng video: {e}")
+                break
+
+    return StreamingResponse(generate(), media_type="multipart/x-mixed-replace; boundary=frame")
+
+# Sự kiện khởi động server
+@app.on_event("startup")
+async def startup_event():
+    print("Server started.")
+
+# Sự kiện tắt server
 @app.on_event("shutdown")
 async def shutdown_event():
-    await release_webcam()
-
+    print("Server shutting down.")
