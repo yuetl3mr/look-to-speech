@@ -5,7 +5,7 @@ def start_flask():
     subprocess.run(["python", "app/app.py"])
 
 def start_fastapi():
-    subprocess.run(["uvicorn", "gaze-ai.api:app", "--host", "127.0.0.1", "--port", "8888"])
+    subprocess.run(["uvicorn", "api:app", "--host", "127.0.0.1", "--port", "8888"], cwd="gaze-ai")
 
 if __name__ == "__main__":
     flask_process = Process(target=start_flask)

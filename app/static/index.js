@@ -1,17 +1,12 @@
 const initialSentence = [
-  "Yes",
-  "No",
-  "I want to sleep",
-  "I'm hungry",
-  "Music please",
-  "Water please",
-  "TV please",
-  "I need doctor"
+  "Yes", "No", "I want to sleep", "I'm hungry", 
+  "Music please", "Water please", "TV please", "I need doctor"
 ];
 
 const leftSection = document.querySelector(".section-left");
 const rightSection = document.querySelector(".section-right");
 const output = document.querySelector(".output");
+const videoStream = document.getElementById("video-stream");
 
 let previousChoice = null;
 let sameChoiceCount = 0;
@@ -47,23 +42,19 @@ const handleAPIResponse = (leftArray, rightArray) => {
   if (!isFetching) return;
 
   setTimeout(() => {
-    fetch('http://127.0.0.1:8888/predict', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json'
-      }
+    fetch("http://127.0.0.1:8888/predict", {
+      method: "GET",
+      headers: { "Content-Type": "application/json" }
     })
       .then(response => response.json())
       .then(data => {
         const choice = data.choice;
-        console.log(choice);
+        console.log("Gaze Direction:", choice);
 
-        const keyboard = document.querySelector('.keyboard');
-        if (choice === -1) {
-          keyboard.style.border = '3px solid rgba(255, 0, 0, 0.5)';
-        } else {
-          keyboard.style.border = '3px solid rgb(105, 223, 242)';
-        }
+        const keyboard = document.querySelector(".keyboard");
+        keyboard.style.border = (choice === -1) 
+          ? "3px solid rgba(255, 0, 0, 0.5)" 
+          : "3px solid rgb(105, 223, 242)";
 
         if (choice === previousChoice) {
           sameChoiceCount++;
@@ -83,21 +74,19 @@ const handleAPIResponse = (leftArray, rightArray) => {
             setTimeout(() => {
               if (choice === 1 && leftArray.length === 1) {
                 output.value = leftArray[0];
-                speakText(leftArray[0]); // Speak the selected text
+                speakText(leftArray[0]);
                 isFetching = false;
                 initKeyboardUI(initialSentence);
               } else if (choice === 2 && rightArray.length === 1) {
                 output.value = rightArray[0];
-                speakText(rightArray[0]); // Speak the selected text
+                speakText(rightArray[0]);
                 isFetching = false;
                 initKeyboardUI(initialSentence);
               } else {
-                const selectedArray = choice === 1 ? leftArray : (choice === 2 ? rightArray : null);
+                const selectedArray = choice === 1 ? leftArray : rightArray;
                 const [newLeft, newRight] = splitArray(selectedArray);
-
                 renderSection(leftSection, newLeft);
                 renderSection(rightSection, newRight);
-
                 handleAPIResponse(newLeft, newRight);
               }
             });
@@ -106,14 +95,13 @@ const handleAPIResponse = (leftArray, rightArray) => {
           }
         } else {
           handleAPIResponse(leftArray, rightArray);
-          return;
         }
       })
-      .catch(error => console.error('Error:', error));
+      .catch(error => console.error("Error:", error));
   }, 500);
 };
 
-document.getElementById('start').addEventListener('click', () => {
+document.getElementById("start").addEventListener("click", () => {
   if (isFetching) return;
   isFetching = true;
   initKeyboardUI(initialSentence);
