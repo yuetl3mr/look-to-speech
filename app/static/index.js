@@ -1,8 +1,11 @@
 const initialSentence = [
-  "Yes", "No", "I want to sleep", "I'm hungry", 
-  "Music please", "Water please", "TV please", "I need doctor"
+  "痛いです。", "Yes", "No", "I want to sleep", "I'm hungry", 
+  "大丈夫です。", "Music please", "Water please", "TV please", "I need doctor"
 ];
-
+window.speechSynthesis.onvoiceschanged = () => {
+  const voices = window.speechSynthesis.getVoices();
+  console.log(voices);
+};
 const leftSection = document.querySelector(".section-left");
 const rightSection = document.querySelector(".section-right");
 const output = document.querySelector(".output");
@@ -33,8 +36,37 @@ const initKeyboardUI = (array) => {
   renderSection(rightSection, rightArray);
 };
 
+const isJapanese = (text) => {
+  return /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/.test(text);
+};
+
 const speakText = (text) => {
   const utterance = new SpeechSynthesisUtterance(text);
+  const voices = window.speechSynthesis.getVoices();
+
+  if (isJapanese(text)) {
+    const japaneseVoice = voices.find(voice => voice.lang === 'ja-JP');
+    if (japaneseVoice) {
+      utterance.voice = japaneseVoice;
+    } else {
+      console.warn("Không tìm thấy giọng nói tiếng Nhật.");
+    }
+  } else {
+    const englishVoice = voices.find(voice => voice.lang === 'en-US');
+    if (englishVoice) {
+      utterance.voice = englishVoice;
+    } else {
+      console.warn("Không tìm thấy giọng nói tiếng Anh.");
+    }
+  }
+
+  utterance.rate = 1; 
+  utterance.pitch = 1; 
+  utterance.volume = 1; 
+
+  utterance.onend = () => {
+    console.log("Finished speaking");
+  };
   window.speechSynthesis.speak(utterance);
 };
 
